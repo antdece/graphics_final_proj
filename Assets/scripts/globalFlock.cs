@@ -28,7 +28,9 @@ public class globalFlock : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        move_all();
+        if (Random.Range(0, 5) < 1){
+            move_all();
+        }
         
         if (Random.Range(0, 100) < 1) {
             goal = new Vector3(Random.Range(-tankSize, tankSize),

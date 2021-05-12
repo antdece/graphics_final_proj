@@ -11,6 +11,9 @@ public class globalFlock : MonoBehaviour
     public static float maxNeighborDist = 5.0F;
     public static float avoidDist = 3.0F;
     public static float rotationSpeed = 3.0F;
+    public static int start_x = -400;
+    public static int start_y = 0;
+    public static int start_z = 0;
 
     Vector3 goal = Vector3.zero;
 
@@ -18,9 +21,9 @@ public class globalFlock : MonoBehaviour
     void Start()
     {
         for (int i = 0; i < numFish; i++){
-            Vector3 pos = new Vector3(Random.Range(-tankSize, tankSize),
-                                      Random.Range(0, 2 * tankSize),
-                                      Random.Range(-tankSize, tankSize));
+            Vector3 pos = new Vector3(Random.Range(start_x - tankSize, start_x + tankSize),
+                                      Random.Range(start_y, start_y + 2 * tankSize),
+                                      Random.Range(start_z - tankSize, start_z + tankSize));
             fish[i] = (GameObject) Instantiate(fishObj, pos, Quaternion.identity);
         }
     }

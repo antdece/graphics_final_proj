@@ -36,9 +36,9 @@ public class globalFlock : MonoBehaviour
         }
         
         if (Random.Range(0, 100) < 1) {
-            goal = new Vector3(Random.Range(-tankSize, tankSize),
-                                      Random.Range(0, 2 * tankSize),
-                                      Random.Range(-tankSize, tankSize));
+            goal = new Vector3(Random.Range(start_x - tankSize, start_x + tankSize),
+                                      Random.Range(start_y, start_y + 2 * tankSize),
+                                      Random.Range(start_z - tankSize, start_z + tankSize));
         }
     }
 

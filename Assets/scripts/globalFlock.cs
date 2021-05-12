@@ -11,9 +11,9 @@ public class globalFlock : MonoBehaviour
     public static float maxNeighborDist = 5.0F;
     public static float avoidDist = 3.0F;
     public static float rotationSpeed = 3.0F;
-    public static int start_x = -400;
-    public static int start_y = 0;
-    public static int start_z = 0;
+    public int start_x = -400;
+    public int start_y = 0;
+    public int start_z = 0;
 
     Vector3 goal = Vector3.zero;
 

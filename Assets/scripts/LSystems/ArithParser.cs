@@ -119,39 +119,27 @@ public class ArithParser
             }
         }
         
-        Debug.Log($"Post Parse: {sb.ToString()}");
         return sb.ToString(); // FIXME: may want to save state instead for evaluation
     }
 
     public string Evaluate(Dictionary<string, float> args, string succ) 
     {
         StringBuilder evalSucc = new StringBuilder(succ);
-        Debug.Log($"in arithparser eval..: {succ}");
         foreach (KeyValuePair<string, Exp> pair in expr) {
-            Debug.Log($"key: {pair.Key} val: {pair.Value}");
             evalSucc.Replace(pair.Key, pair.Value.Eval(args).ToString());
         }
 
-        Debug.Log($"after arithparser eval..: {evalSucc.ToString()}");
         return evalSucc.ToString();
     }
 
     private Exp ParseParam(Queue<ArithToken> param) 
     {
-        Debug.Log("parsing param: ");
-        foreach(ArithToken at in param) {
-            Debug.Log($"parsing at: {at.lexeme}");
-            if (at.lexeme == "")
-                Debug.Log("empty lexeme for some reason..");
-        }
-
         return ParseAddition(param);
     }
 
     private Exp ParseAddition(Queue<ArithToken> param)
     {
         
-        Debug.Log($"1 queue currently at: {param.Count}");
         Exp lhs = ParseMult(param);
         if (param.Count == 0)
             return lhs;
@@ -159,7 +147,6 @@ public class ArithParser
             throw new ParseException("Expect PLUS/MINUS operator");
 
         Ops op = OpsFromTok(param.Dequeue());
-        Debug.Log($"2 queue currently at: {param.Count}");
         Exp rhs = ParseMult(param);
         return new BinExp(lhs, op, rhs);
     }
@@ -195,7 +182,6 @@ public class ArithParser
         Exp lhs;
         float val;
         if (this.constants.TryGetValue(varName, out val)) {
-            Debug.Log($"loading const: {varName} with val: {val}");
             lhs = new ConstExp(val);
         } else
             lhs = new VarExp(varName);

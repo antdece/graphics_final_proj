@@ -104,6 +104,7 @@ public class Tokenizer
                 tokens.Add(new Token(currentLex.ToString(), TokenType.COMMAND));
                 currentLex.Clear();
             }
+
         }
         tokens.Add(new Token(currentLex.ToString(), TokenType.COMMAND));
         
@@ -150,12 +151,6 @@ public class Tokenizer
             parameters.Add(arithTokens);
         }
 
-        foreach(Queue<ArithToken> parameter in parameters) {
-            Debug.Log($"===paramters for {param}===");
-            foreach(ArithToken at in parameter) {
-                Debug.Log($"at: {at.lexeme}");
-            }
-        }
 
         return parameters;
     }
@@ -183,7 +178,7 @@ public class CommandTokenizer
     public char Peek()
     {
         if (!HasNext())
-            throw new CommandTokenizerException("No remaining characters");
+            return '\0';
 
         return this.commands[index];
     }
@@ -200,7 +195,6 @@ public class CommandTokenizer
         List<float> arguments = new List<float>();        
         string currentArg = "";
         while (Peek() != ')') {
-            Debug.Log($"{Peek()}");
             if (Peek() == ',') {
                 ConsumeNext();
                 double arg = 0.0;
@@ -210,11 +204,9 @@ public class CommandTokenizer
                     throw new CommandTokenizerException($"Failed to convert argument to floating point value: {currentArg}");
                 currentArg = "";
             } else {
-                Debug.Log("about to grab next part of current arg");
-                currentArg += ConsumeNext(); // FIXME: have better named private call perhaps?
+                currentArg += ConsumeNext();
             }
         }
-        Debug.Log("about to consume end paren");
         ConsumeNext(); // consume ')'
 
         double darg = 0.0;

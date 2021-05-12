@@ -34,6 +34,14 @@ public abstract class MeshBranch: Branch
     protected Mesh m;
     protected List<Vector3> _vertices = new List<Vector3>();
 
+    public Material material 
+    {
+        set 
+        {
+            this.mr.material = value;
+        }
+    }
+
     public MeshBranch(string name, Vector3 start, Vector3 end) : base(name, start, end)
     {
         this.mf = branchGo.AddComponent<MeshFilter>();
@@ -76,13 +84,7 @@ public class LineBranch: Branch
 public class CylinderBranch: MeshBranch
 {
     private float radius;
-    public Material material 
-    {
-        set 
-        {
-            this.mr.material = value;
-        }
-    }
+
 
     public CylinderBranch(string name, Vector3 start, Vector3 end, float radius) : base(name, start, end) 
     {
@@ -162,36 +164,97 @@ public class CylinderBranch: MeshBranch
         mf.mesh.RecalculateNormals();
     }
 }
+public class ConeBranch: MeshBranch
+{
+    private float startRad;
+    private float endRad;
 
-// public class ConeBranch: Branch
-// {
-//     private float startRad;
-//     private float endRad;
+    public ConeBranch(string name, Vector3 start, Vector3 end, float startRad, float endRad) : base(name, start, end)
+    {
+        this.startRad = startRad;
+        this.endRad = endRad;
+        GenerateMesh();
+        Vector3 lookDir = endPos - startPos;
+        Quaternion rot = Quaternion.FromToRotation(branchGo.transform.right, lookDir); 
+        branchGo.transform.rotation = rot * branchGo.transform.rotation;
+    }
 
-//     public ConeBranch(string name, Vector3 start, Vector3 end, float startRad, float endRad) : base(name, start, end)
-//     {
-//         this.startRad = startRad;
-//         this.endRad = endRad;
-//     }
-
-//     public override GenerateMesh()
-//     {
-//         double bottomCircum = Math.PI * 2 * startRad;
-//         double topCircum = Math.PI * 2 * endRad;
-//         double length = Vector3.Length(startPos, endPos);
-//         double sideTriangleLen = (bottomCircum - topCircum) / 2;
-//         double xStep = topCircum / 2;
+    public override void GenerateMesh()
+    {
+        double bottomCircum = Math.PI * 2 * startRad;
+        double topCircum = Math.PI * 2 * endRad;
+        double length = Vector3.Distance(startPos, endPos);
+        float sideTriangleLen = (float)(bottomCircum - topCircum) / 2;
+        const int numberSegments = 5;
+        float xStep = (float)length;
+        float yStep = (float)(topCircum / numberSegments);
+        int lowerLeftTrap = 0;
+        int lowerRightTrap = 0;
         
-//         // left triangle
-//         Vector3 vert = Vector3.zero;
-//         _vertices.Add(vert);
-//         vert = new Vector3(vert.x + sideTriangleLen, vert.y, vert.z);
-//         _vertices.Add(vert);
 
-//         _vertices.Add()
-//         vert = new Vector3(vert.x, vert.y + length, vert.z);
-//         _vertices.Add(vert);
+        Vector3 vert = new Vector3(0, (float)sideTriangleLen, 0);
+        Vector2 [] uvs = new Vector2[((numberSegments + 1) * 2) + 2];
+        for (int i = 0; i < numberSegments + 1; i++) {
+            double theta = (2 * Math.PI) * (vert.y / bottomCircum);
+            Debug.Log($"Bottom row vertex: {vert} with xStep: {xStep} and topCircum: {topCircum} startRad: {startRad} numberSegments: {numberSegments}");
+            _vertices.Add(new Vector3(vert.x, (float)(startRad * Math.Cos(theta)), (float)(startRad * Math.Sin(theta))));
+            vert = new Vector3(vert.x, vert.y + yStep, vert.z);
+            uvs[i] = new Vector2(vert.y / (float)topCircum, 0);
+        }
+        // // right triangle, lower right
+        
+        // lowerRightTrap = _vertices.Count - 1;
+        // uvs[numberSegments + i] = new Vector2(1, 0);
+
+        // top vertices
+        vert = new Vector3(xStep, (float)sideTriangleLen, 0);
+        for (int i = 0; i < numberSegments + 1; i++) {
+            double theta = (2 * Math.PI) * (vert.y / topCircum);
+            _vertices.Add(new Vector3(vert.x, (float)(endRad * Math.Cos(theta)), (float)(endRad * Math.Sin(theta))));
+            vert = new Vector3(vert.x, vert.y + yStep, vert.z);
+            Debug.Log($"Top row vertex: {vert}");
+            uvs[i + numberSegments + 1] = new Vector2(vert.y / (float)bottomCircum, 1);
+        }
+
+        uvs[((numberSegments + 1) * 2)] = new Vector2(0, 0);
+        uvs[((numberSegments + 1) * 2) + 1] = new Vector2(1, 0);
+        _vertices.Add(new Vector3(0, ((float)Math.Cos(0.0) * startRad), ((float)Math.Sin(0.0) * startRad))); // 12
+        _vertices.Add(new Vector3(0, ((float)Math.Cos(2 * Math.PI) * startRad), ((float)Math.Sin(2 * Math.PI) * startRad))); // 13
+
+        int [] triangleLiterals = new int[] {
+            0, 6, 1,
+            0, 1, 6,
+            7, 6, 1,
+            7, 1, 6,
+            1, 7, 2,
+            1, 2, 7,
+            8, 7, 2,
+            8, 2, 7,
+            2, 3, 8,
+            2, 8, 3,
+            9, 8, 3,
+            9, 3, 8,
+            3, 9, 4,
+            3, 4, 9,
+            10, 9, 4,
+            10, 4, 9,
+            4, 10, 5,
+            4, 5, 10,
+            11, 10, 5,
+            11, 5, 10,
+            0, 12, 6,
+            0, 6, 12,
+            5, 13, 11,
+            5, 11, 13
+        };
 
 
-//     }
-// }
+        m.vertices = _vertices.ToArray();
+        m.triangles = triangleLiterals;
+        m.uv = uvs;
+
+        mf.mesh = m;
+        mf.mesh.RecalculateNormals();
+
+    }
+}

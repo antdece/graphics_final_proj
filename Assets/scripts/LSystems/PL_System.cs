@@ -44,10 +44,6 @@ class Production
     public string Evaluate(List<float> args)
     {
         if (args.Count != this.arguments.Count) {
-            Debug.Log("uneven args");
-            foreach (char arg in this.arguments) {
-                Debug.Log($"prod arg: {arg}");
-            }
             return ""; // FIXME: maybe exception?
         }
 
@@ -87,7 +83,7 @@ public class PL_System : MonoBehaviour
 
     public int iterations = 10;
 
-    public string axiom = "A(10, 10)";
+    public string axiom = "A(1, 10)";
 
     // contraction ratio for trunk
     public float r1 = 0.9f;
@@ -107,9 +103,14 @@ public class PL_System : MonoBehaviour
     // width decrease rate
     public float wr = 0.707f;
 
-    public float startX = 0;
-    public float startY = 0;
-    public float startZ = 0;
+    // angle for leave direction changes
+    public float lt = 22.5f;
+
+    public float startX = 0.0f;
+    public float startY = 0.0f;
+    public float startZ = 0.0f;
+    public List<string> prodPred = new List<string>();
+    public List<string> prodSucc = new List<string>();
 
     private List<Production> productions = new List<Production>();
     private Dictionary<string, float> constants;
@@ -118,13 +119,18 @@ public class PL_System : MonoBehaviour
     private State state; 
     private int currentBranch = 0;
     private MeshRenderer meshRenderer;
+    private LineRenderer lineRenderer;
+    private Leaf currentLeaf;
+    private List<Leaf> leaves = new List<Leaf>();
+    private int leafCount = 0;
 
-    private float radius;
+    private float radius = 0.1f;
 
     void Setup()
     {
         state = new State(new Vector3(startX, startY, startZ), Vector3.up, Vector3.left);
         meshRenderer = GetComponent<MeshRenderer>();
+        lineRenderer = GetComponent<LineRenderer>(); 
 
         constants = new Dictionary<string, float> {
             ["r1"] = r1,
@@ -132,26 +138,33 @@ public class PL_System : MonoBehaviour
             ["a0"] = a0,
             ["a2"] = a2,
             ["d"] = d,
-            ["wr"] = wr
+            ["wr"] = wr,
+            ["lt"] = lt
         };
 
         Production.constants = constants;
         // A(1, 10)
         // !(10)F(1)[&(45)B(0,0)]/(137.5)A(0,0)
-        productions.Add(new Production("A(l, w)", "!(w)F(l)[&(a0)B(l*r2,w*wr)]/(d)A(l*r1,w*wr)"));
-        productions.Add(new Production("B(l, w)", "!(w)F(l)[-(a2)$C(l*r2,w*wr)]C(l*r1,w*wr)"));
-        productions.Add(new Production("C(l, w)", "!(w)F(l)[+(a2)$B(l*r2,w*wr)]B(l*r1,w*wr)"));
-        // productions.Add(new Production(""))
+        LoadProductions();
+
+    }
+
+    private void LoadProductions()
+    {
+        if (prodPred.Count == 0 || prodSucc.Count == 0 || prodSucc.Count != prodPred.Count) {
+                productions.Add(new Production("A(l, w)", "!(w)F(l)L[&(a0)B(l*r2,w*wr)]L/(d)A(l*r1,w*wr)L"));
+                productions.Add(new Production("B(l, w)", "!(w)F(l)L[-(a2)$C(l*r2,w*wr)]LC(l*r1,w*wr)L"));
+                productions.Add(new Production("C(l, w)", "!(w)F(l)L[+(a2)$B(l*r2,w*wr)]LB(l*r1,w*wr)L"));
+                productions.Add(new Production("L", "[’’’'^(lt)'^(lt){-(lt)f+(lt)f+(lt)f-(lt)|-(lt)f+(lt)f+(lt)f}]"));
+        } else {
+            for (int i = 0; i < prodSucc.Count; i++) {
+                productions.Add(new Production(prodPred[i], prodSucc[i]));
+            }
+        }
     }
 
     string Generate(int iterations)
     {
-        // Ex:
-        // start: A(1, 10)
-        // Gen 1: !(w)F(l)[&(a0)B(l*r2,w*wr)]/(d)A(l*r1,w*wr)
-        // find 'A' as an invocation for a production
-        // replace 'A' with production specified by A(l, w), with l = 1, w = 10 and constants
-
         string sentence = axiom;
         for (int n = 0; n < iterations; n++) {
             StringBuilder sb = new StringBuilder();
@@ -167,7 +180,6 @@ public class PL_System : MonoBehaviour
                     } else {
                         sb.Append(c);
                     }
-
                     continue;
                  }
 
@@ -201,23 +213,23 @@ public class PL_System : MonoBehaviour
                     continue;
                 }
 
-                if (current == null) {
-                    foreach (Production p in productions) {
-                        if (p.Invocation == c.ToString()) {
-                            current = p;
-                            break;
-                        }
-                    }
-
-                    if (current == null) 
-                        sb.Append(c);
-                } else {
+                if (current != null) {
                     sb.Append(current.Evaluate(arguments));
                     current = null;
                 }
+                
+                foreach (Production p in productions) {
+                    if (p.Invocation == c.ToString()) {
+                        current = p;
+                        break;
+                    }
+                }
+
+                if (current == null) 
+                    sb.Append(c);
+                
             }
 
-            Debug.Log($"new sentence: {sb.ToString()}");
             sentence = sb.ToString();
         }
 
@@ -233,18 +245,13 @@ public class PL_System : MonoBehaviour
             char nextCommand = ct.NextCommand();
             switch(nextCommand) {
                 case 'F':
-                    Debug.Log("about to draw forward");
                     args = ct.GetArguments();
-                    Debug.Log($"received arguments: {args.Count}");
                     DrawMesh(args[0]); // FIXME: check args first
-
                     break;
                 case '!':
-                    Debug.Log("about to set line width");
                     args = ct.GetArguments();
                     // set line width
                     this.radius = (args[0] / 2) * 0.05f;
-                    Debug.Log("successfully set line width");
                     break;
                 case '+':
                     args = ct.GetArguments();
@@ -255,9 +262,7 @@ public class PL_System : MonoBehaviour
                     state.turn(-args[0]);
                     break;
                 case '&':
-                    Debug.Log("executing pitch");
                     args = ct.GetArguments();
-                    Debug.Log($"received pitch args: {args.Count}");
                     state.pitch(args[0]);
                     break;
                 case '^':
@@ -269,28 +274,38 @@ public class PL_System : MonoBehaviour
                     state.roll(-args[0]);
                     break;
                 case '/':
-                    Debug.Log("executing roll");
                     args = ct.GetArguments();
-                    Debug.Log($"received roll arguments: {args.Count}");
                     state.roll(args[0]);
                     break;
                 case '[':
-                    Debug.Log("saving state");
                     states.Push(state.Clone());
                     break;
                 case ']':
-                    Debug.Log("restoring state");
                     state = states.Pop();
                     break;
+                case '|':
+                    state.turn(180.0f);
+                break;
                 case '$':
-                    Debug.Log("executing dollar");
                     state.dollarRoll(Vector3.up);
                     break;
-                default:
-                    Debug.Log($"no action for invocation: {nextCommand}");
-                    if (ct.HasNextArguments())
-                        ct.GetArguments(); // walk through arguments
+                case '{':
+                    StartLeaf();
                     break;
+                case '}':
+                    EndLeaf();
+                    break;
+                default:
+                    
+                    State nextState;
+                    if (currentLeaf != null && (nextState = currentLeaf.AcceptCommand(nextCommand, state)) != null) {
+                        state = nextState;
+                    } else {
+                        if (ct.HasNextArguments())
+                            ct.GetArguments(); // walk through arguments
+                    }
+
+                    continue;
             }
         }
     }
@@ -299,14 +314,30 @@ public class PL_System : MonoBehaviour
     void DrawMesh(float size)
     {
         State nextState = state.NextState(size);
-        var mesh = new CylinderBranch($"TestMesh_{currentBranch++}", state.GetCurrentPos(), nextState.GetCurrentPos(), this.radius);
-        Debug.Log($"Drawing forward: {currentBranch}");
+        var mesh = new ConeBranch($"TestMesh_{currentBranch++}", state.GetCurrentPos(), nextState.GetCurrentPos(), this.radius, this.radius * this.wr);
         mesh.position = state.GetCurrentPos();
         mesh.material = meshRenderer.material;
         state = nextState;
         branches.Add(mesh);
     }
 
+
+    private void StartLeaf()
+    {
+        currentLeaf = new HexLeaf($"PolygonLeaf_{leafCount++}", state.GetCurrentPos());
+        currentLeaf.material = lineRenderer.material;
+    }
+
+    private void EndLeaf()
+    {
+        if (currentLeaf == null)
+            return;
+
+        currentLeaf.material = lineRenderer.material;
+        currentLeaf.Render();
+        leaves.Add(currentLeaf);
+        currentLeaf = null;
+    }
 
     private float Convert(string conv)
     {
@@ -325,7 +356,6 @@ public class PL_System : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("IN START");
         Setup();
         string sentence = Generate(iterations);
         Draw(sentence);

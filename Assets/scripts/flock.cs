@@ -40,5 +40,4 @@ public class flock : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(goal), 4.0F * Time.deltaTime);
         }
     }
-
 }

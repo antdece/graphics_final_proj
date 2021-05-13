@@ -5,8 +5,8 @@ using UnityEngine;
 public class flock : MonoBehaviour
 {
 
-    public float maxSpeed = 0.75F;
-    public float minSpeed = 0.35F;
+    public float maxSpeed = 2.0F;
+    public float minSpeed = 0.5F;
 
     public float speed;
     public static GameObject globalScript;
@@ -28,7 +28,6 @@ public class flock : MonoBehaviour
         float start_z = gf.start_z;
         float tankSize = gf.tankSize;
         Vector3 goal = gf.goal;
-        print(goal);
         transform.Translate(0, 0, Time.deltaTime * speed);
         if (transform.position.x > start_x + tankSize || transform.position.x < start_x - tankSize){
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(goal), 4.0F * Time.deltaTime);

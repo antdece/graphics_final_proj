@@ -20,6 +20,7 @@ public class globalFlock : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        goal = new Vector3(start_x, start_y, start_z);
         for (int i = 0; i < numFish; i++){
             Vector3 pos = new Vector3(Random.Range(start_x - tankSize, start_x + tankSize),
                                       Random.Range(start_y, start_y + 2 * tankSize),

@@ -4,62 +4,6 @@ using System.Text;
 using UnityEngine;
 
 
-public class State 
-{
-    public float x;
-    public float y;
-    public float z;
-    public Vector3 pos;
-    public Vector3 h;
-    public Vector3 l;
-    public Vector3 u;
-
-
-    public State(Vector3 pos, Vector3 h, Vector3 l) 
-    {
-        this.pos = pos;
-        this.h = h;
-        this.l = l;
-        this.u = Vector3.Cross(h, l);
-    }
-
-    public Vector3 GetCurrentPos()
-    {
-        return pos;
-    }
-
-    private void rotateAxis(float deg, Vector3 axis) 
-    {
-        h = Quaternion.AngleAxis(deg, axis) * h;
-        l = Quaternion.AngleAxis(deg, axis) * l;
-        u = Quaternion.AngleAxis(deg, axis) * u;
-    }
-
-    public void roll(float deg) => rotateAxis(deg, h);
-
-    public void pitch(float deg) => rotateAxis(deg, l);
-
-    public void turn(float deg) => rotateAxis(deg, u);
-
-    public void dollarRoll(Vector3 v) 
-    {
-        var VcrossH = Vector3.Cross(v, h);
-        l = VcrossH.normalized;
-    }
-
-    public State NextState(float size) 
-    {
-        Vector3 nextPos =  GetCurrentPos() + h * size;
-        return new State(nextPos, h, l);
-    }
-
-    public State Clone() 
-    {
-        return new State(pos, h, l);
-    }
-}
-
-
 public class L_System : MonoBehaviour
 {
 
@@ -152,8 +96,7 @@ public class L_System : MonoBehaviour
                 case 'X':
                     continue;
                 case 'F':
-                    // DrawLine();
-                    DrawMesh();
+                    DrawBranch();
                     break;
                 case '{':
                     StartLeaf();
@@ -191,7 +134,7 @@ public class L_System : MonoBehaviour
         return current;
     }
 
-    void DrawMesh()
+    void DrawBranch()
     {
         State nextState = state.NextState(size);
         var mesh = new CylinderBranch($"TestMesh_{currentLine++}", state.GetCurrentPos(), nextState.GetCurrentPos(), 0.05f);
@@ -235,10 +178,6 @@ public class L_System : MonoBehaviour
         if (currentLeaf == null)
             return;
 
-        Debug.Log($"Leaf points: {currentLeaf.name}");
-        foreach (Vector3 vertex in currentLeaf.vertices) {
-            Debug.Log(vertex);
-        }
 
         currentLeaf.Render();
         currentLeaf.material = meshRenderer.material;
@@ -247,8 +186,8 @@ public class L_System : MonoBehaviour
 
     private Vector3 NextPoint(float size)
     {
-        Vector3 curPos = state.GetCurrentPos();
-        return curPos + state.h * size;
+        State nextState = state.NextState(size);
+        return nextState.GetCurrentPos();
     }
 
     private LineRenderer SetupLineRenderer(GameObject go)

@@ -6,21 +6,20 @@ public class globalFlock : MonoBehaviour
 {
     public GameObject fishObj;
     static int numFish = 20;
-    public int tankSize = 5;
+    public static int tankSize = 3;
     public static GameObject[] fish = new GameObject[numFish];
-    public float maxNeighborDist = 5.0F;
-    public float avoidDist = 3.0F;
-    public float rotationSpeed = 3.0F;
-    public int start_x = 62;
-    public int start_y = 50;
-    public int start_z = 237;
+    public static float maxNeighborDist = 5.0F;
+    public static float avoidDist = 3.0F;
+    public static float rotationSpeed = 3.0F;
+    public int start_x = -400;
+    public int start_y = 0;
+    public int start_z = 0;
 
-    public Vector3 goal = Vector3.zero;
+    Vector3 goal = Vector3.zero;
 
     // Start is called before the first frame update
     void Start()
     {
-        goal = new Vector3(start_x, start_y, start_z);
         for (int i = 0; i < numFish; i++){
             Vector3 pos = new Vector3(Random.Range(start_x - tankSize, start_x + tankSize),
                                       Random.Range(start_y, start_y + 2 * tankSize),

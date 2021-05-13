@@ -77,6 +77,9 @@ public class Tokenizer
         bool inInvocation = false;
         for (int i = 0; i < succ.Length; i++) {
             char curr = succ[i];
+            if (curr == ' ')
+                continue;
+
             if (curr == ')') {
                 inInvocation = false;
                 string paramStr = currentParam.ToString();
@@ -240,6 +243,7 @@ public class CommandTokenizer
     {
         if (!HasNext())
             throw new CommandTokenizerException("Reached end of command string prematurely");
+
         return this.commands[index++];
     }
 }

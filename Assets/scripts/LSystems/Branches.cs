@@ -88,7 +88,6 @@ public class CylinderBranch: MeshBranch
 
     public CylinderBranch(string name, Vector3 start, Vector3 end, float radius) : base(name, start, end) 
     {
-        Debug.Log($"received radius: {radius}");
         this.radius = radius;
         GenerateMesh();
         Vector3 lookDir = endPos - startPos;
@@ -194,17 +193,14 @@ public class ConeBranch: MeshBranch
 
         Vector3 vert = new Vector3(0, (float)sideTriangleLen, 0);
         Vector2 [] uvs = new Vector2[((numberSegments + 1) * 2) + 2];
+
+        // bottom vertices
         for (int i = 0; i < numberSegments + 1; i++) {
             double theta = (2 * Math.PI) * (vert.y / bottomCircum);
-            Debug.Log($"Bottom row vertex: {vert} with xStep: {xStep} and topCircum: {topCircum} startRad: {startRad} numberSegments: {numberSegments}");
             _vertices.Add(new Vector3(vert.x, (float)(startRad * Math.Cos(theta)), (float)(startRad * Math.Sin(theta))));
             vert = new Vector3(vert.x, vert.y + yStep, vert.z);
             uvs[i] = new Vector2(vert.y / (float)topCircum, 0);
         }
-        // // right triangle, lower right
-        
-        // lowerRightTrap = _vertices.Count - 1;
-        // uvs[numberSegments + i] = new Vector2(1, 0);
 
         // top vertices
         vert = new Vector3(xStep, (float)sideTriangleLen, 0);
@@ -212,7 +208,6 @@ public class ConeBranch: MeshBranch
             double theta = (2 * Math.PI) * (vert.y / topCircum);
             _vertices.Add(new Vector3(vert.x, (float)(endRad * Math.Cos(theta)), (float)(endRad * Math.Sin(theta))));
             vert = new Vector3(vert.x, vert.y + yStep, vert.z);
-            Debug.Log($"Top row vertex: {vert}");
             uvs[i + numberSegments + 1] = new Vector2(vert.y / (float)bottomCircum, 1);
         }
 
@@ -255,6 +250,5 @@ public class ConeBranch: MeshBranch
 
         mf.mesh = m;
         mf.mesh.RecalculateNormals();
-
     }
 }

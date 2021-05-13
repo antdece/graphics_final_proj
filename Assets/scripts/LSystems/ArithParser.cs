@@ -34,7 +34,7 @@ struct VarExp: Exp
     }
 
     public float Eval(Dictionary<string, float> env)
-    {
+    {   
         return env[varName];
     }
 }
@@ -62,7 +62,6 @@ struct BinExp: Exp
 
     public BinExp(Exp l, Ops op, Exp r) 
     {
-        Debug.Log("creating BinExp");
         this.l = l;
         this.op = op;
         this.r = r;
@@ -70,17 +69,13 @@ struct BinExp: Exp
 
     public float Eval(Dictionary<string, float> env)
     {
-        Debug.Log("evalutation BinExp");
         switch(op) {
             case Ops.plus:
                 return l.Eval(env) + r.Eval(env);
             case Ops.minus:
                 return l.Eval(env) - r.Eval(env);
             case Ops.mult:
-                float lhs = l.Eval(env);
-                float rhs = r.Eval(env);
-                Debug.Log($"executing: {lhs} * {rhs}");
-                return lhs * rhs;
+                return l.Eval(env) * r.Eval(env);
             case Ops.div: 
                 return l.Eval(env) / r.Eval(env);
         }
@@ -181,11 +176,14 @@ public class ArithParser
         string varName = tok.lexeme;
         Exp lhs;
         float val;
-        if (this.constants.TryGetValue(varName, out val)) {
-            lhs = new ConstExp(val);
-        } else
-            lhs = new VarExp(varName);
 
+        if (this.constants.TryGetValue(varName, out val)) {
+
+            lhs = new ConstExp(val);
+        } else {
+            Debug.Log($"is variable: {varName}");
+            lhs = new VarExp(varName);
+        }
         return lhs;
     }
 

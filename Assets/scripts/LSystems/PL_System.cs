@@ -97,6 +97,9 @@ public class PL_System : MonoBehaviour
     // branching angle for lateral axis
     public float a2 = 45.0f;
 
+    // branching angle aux.
+    public float a1 = 60.0f;
+
     // divergence angle 
     public float d = 137.5f;
 
@@ -136,6 +139,7 @@ public class PL_System : MonoBehaviour
             ["r1"] = r1,
             ["r2"] = r2,
             ["a0"] = a0,
+            ["a1"] = a1,
             ["a2"] = a2,
             ["d"] = d,
             ["wr"] = wr,
@@ -158,6 +162,7 @@ public class PL_System : MonoBehaviour
                 productions.Add(new Production("L", "[’’’'^(lt)'^(lt){-(lt)f+(lt)f+(lt)f-(lt)|-(lt)f+(lt)f+(lt)f}]"));
         } else {
             for (int i = 0; i < prodSucc.Count; i++) {
+                Debug.Log($"custom production: {prodPred[i]} -> {prodSucc[i]}");
                 productions.Add(new Production(prodPred[i], prodSucc[i]));
             }
         }
@@ -180,10 +185,7 @@ public class PL_System : MonoBehaviour
                     } else {
                         sb.Append(c);
                     }
-                    continue;
-                 }
-
-                if (c == ')') {
+                 } else if (c == ')') {
                     if (current != null) {
                         inFun = false;
                         arguments.Add(Convert(curArg.ToString()));
@@ -194,39 +196,33 @@ public class PL_System : MonoBehaviour
                     } else {
                         sb.Append(c);
                     }
-                    continue;
-                }
-
-                if (c == ',') {
+                } else if (c == ',') {
                     if (current != null) {
                         arguments.Add(Convert(curArg.ToString()));
                         curArg.Clear();
                     } else {
                         sb.Append(c);
                     }
-                        
-                    continue;
-                }
 
-                if (inFun) {
+                } else if (inFun) {
                     curArg.Append(c);
-                    continue;
-                }
+                } else {
 
-                if (current != null) {
-                    sb.Append(current.Evaluate(arguments));
-                    current = null;
-                }
-                
-                foreach (Production p in productions) {
-                    if (p.Invocation == c.ToString()) {
-                        current = p;
-                        break;
+                    if (current != null) {
+                        sb.Append(current.Evaluate(arguments));
+                        current = null;
                     }
-                }
+                    
+                    foreach (Production p in productions) {
+                        if (p.Invocation == c.ToString()) {
+                            current = p;
+                            break;
+                        }
+                    }
 
-                if (current == null) 
-                    sb.Append(c);
+                    if (current == null) 
+                        sb.Append(c);
+                }
                 
             }
 
@@ -246,7 +242,7 @@ public class PL_System : MonoBehaviour
             switch(nextCommand) {
                 case 'F':
                     args = ct.GetArguments();
-                    DrawMesh(args[0]); // FIXME: check args first
+                    DrawBranch(args[0]); // FIXME: check args first
                     break;
                 case '!':
                     args = ct.GetArguments();
@@ -311,7 +307,7 @@ public class PL_System : MonoBehaviour
     }
 
 
-    void DrawMesh(float size)
+    void DrawBranch(float size)
     {
         State nextState = state.NextState(size);
         var mesh = new ConeBranch($"TestMesh_{currentBranch++}", state.GetCurrentPos(), nextState.GetCurrentPos(), this.radius, this.radius * this.wr);
